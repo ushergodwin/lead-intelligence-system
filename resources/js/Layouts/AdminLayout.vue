@@ -62,7 +62,7 @@ const getHref = (item) => {
         <nav class="sidebar" :class="{ collapsed: sidebarCollapsed }">
             <!-- Brand -->
             <a href="#" class="brand">
-                <i class="fas fa-brain"></i>
+                <img src="/img/logo.png" alt="LeadIntel" style="width:28px;height:28px;object-fit:contain;flex-shrink:0">
                 <span class="ms-2">LeadIntel</span>
             </a>
 
