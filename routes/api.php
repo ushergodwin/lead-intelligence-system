@@ -37,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('leads')->name('leads.')->group(function () {
         Route::get('/{lead}',              [LeadController::class, 'show'])->name('show');
         Route::patch('/{lead}/approve',    [LeadController::class, 'approve'])->name('approve');
+        Route::patch('/{lead}/archive',    [LeadController::class, 'archive'])->name('archive');
+        Route::patch('/{lead}/unarchive',  [LeadController::class, 'unarchive'])->name('unarchive');
         Route::post('/{lead}/send-email',  [LeadController::class, 'sendEmail'])->name('send-email');
         Route::post('/{lead}/send-sms',    [LeadController::class, 'sendSms'])->name('send-sms');
         Route::delete('/{lead}',           [LeadController::class, 'destroy'])->name('destroy');

@@ -21,6 +21,13 @@ class LeadController extends Controller
     {
         $query = Lead::query();
 
+        // Archived / Active filter (default: active only)
+        if ($request->boolean('archived')) {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
+        }
+
         // Search
         if ($search = $request->input('search')) {
             $query->where('business_name', 'like', "%{$search}%");
@@ -74,7 +81,7 @@ class LeadController extends Controller
         return Inertia::render('Leads/Index', [
             'leads'      => $leads,
             'categories' => $categories,
-            'filters'    => $request->only(['search', 'high_score', 'approved', 'contacted', 'category', 'sort', 'direction', 'has_mobile']),
+            'filters'    => $request->only(['search', 'high_score', 'approved', 'contacted', 'category', 'sort', 'direction', 'has_mobile', 'archived']),
         ]);
     }
 

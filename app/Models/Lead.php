@@ -26,6 +26,7 @@ class Lead extends Model
         'follow_up_due_at',
         'follow_up_sent',
         'sms_sent_at',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -37,6 +38,7 @@ class Lead extends Model
         'follow_up_due_at'     => 'datetime',
         'follow_up_sent'       => 'boolean',
         'sms_sent_at'          => 'datetime',
+        'archived_at'          => 'datetime',
     ];
 
     // -------------------------------------------------------------------------
@@ -67,9 +69,20 @@ class Lead extends Model
         return $query->where('contacted', true);
     }
 
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
     public function scopeReadyForOutreach($query)
     {
-        return $query->where('approved_for_outreach', true)
+        return $query->whereNull('archived_at')
+                     ->where('approved_for_outreach', true)
                      ->where('contacted', false)
                      ->where('email_status', 'pending');
     }
@@ -79,7 +92,8 @@ class Lead extends Model
      */
     public function scopeFollowUpDue($query)
     {
-        return $query->where('email_status', 'sent')
+        return $query->whereNull('archived_at')
+                     ->where('email_status', 'sent')
                      ->where('follow_up_sent', false)
                      ->whereNotNull('follow_up_due_at')
                      ->where('follow_up_due_at', '<=', now());

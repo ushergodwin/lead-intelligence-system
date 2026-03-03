@@ -89,6 +89,28 @@ class LeadController extends Controller
         return response()->json(['message' => 'SMS delivery failed. Check logs for details.'], 500);
     }
 
+    public function archive(Lead $lead): JsonResponse
+    {
+        /** @var \App\Models\User $authUser */
+        $authUser = Auth::user();
+        abort_if(! $authUser->hasAnyRole(['super_admin', 'manager']), 403, 'Insufficient permissions.');
+
+        $lead->update(['archived_at' => now()]);
+
+        return response()->json(['message' => 'Lead archived.', 'archived_at' => $lead->archived_at]);
+    }
+
+    public function unarchive(Lead $lead): JsonResponse
+    {
+        /** @var \App\Models\User $authUser */
+        $authUser = Auth::user();
+        abort_if(! $authUser->hasAnyRole(['super_admin', 'manager']), 403, 'Insufficient permissions.');
+
+        $lead->update(['archived_at' => null]);
+
+        return response()->json(['message' => 'Lead restored from archive.']);
+    }
+
     public function destroy(Lead $lead): JsonResponse
     {
         /** @var \App\Models\User $authUser */

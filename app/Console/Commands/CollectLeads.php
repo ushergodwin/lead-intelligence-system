@@ -49,9 +49,19 @@ class CollectLeads extends Command
             return Command::SUCCESS;
         }
 
-        $categories = $this->resolveCategories();
-        $this->info('Starting collection for ' . count($categories) . " category/categories.\n");
-        Log::info('CollectLeads: started', ['categories' => $categories, 'limit' => $this->dailyLimit]);
+        $categories       = $this->resolveCategories();
+        $categoryCount    = count($categories);
+        $perCategoryLimit = $categoryCount > 0
+            ? (int) ceil($this->dailyLimit / $categoryCount)
+            : $this->dailyLimit;
+
+        $this->info('Starting collection for ' . $categoryCount . " category/categories.");
+        $this->info("Per-category limit : {$perCategoryLimit}\n");
+        Log::info('CollectLeads: started', [
+            'categories'        => $categories,
+            'limit'             => $this->dailyLimit,
+            'per_category_limit' => $perCategoryLimit,
+        ]);
 
         foreach ($categories as $category) {
             if ($this->limitReached()) {
@@ -60,7 +70,7 @@ class CollectLeads extends Command
                 break;
             }
 
-            $this->processCategory($category);
+            $this->processCategory($category, $perCategoryLimit);
         }
 
         $this->info("\nCollection complete. New leads today: {$this->newLeadsToday}/{$this->dailyLimit}");
@@ -114,12 +124,13 @@ class CollectLeads extends Command
     // Per-category processing
     // -------------------------------------------------------------------------
 
-    private function processCategory(string $category): void
+    private function processCategory(string $category, int $perCategoryLimit): void
     {
-        $this->line("  -> Searching: {$category}  (slots remaining: {$this->remaining()})");
+        $this->line("  -> Searching: {$category}  (slots remaining: {$this->remaining()}, cat limit: {$perCategoryLimit})");
         Log::info('CollectLeads: searching category', [
-            'category'  => $category,
-            'remaining' => $this->remaining(),
+            'category'          => $category,
+            'remaining'         => $this->remaining(),
+            'per_category_limit' => $perCategoryLimit,
         ]);
 
         $places = $this->places->textSearch($category);
@@ -130,18 +141,38 @@ class CollectLeads extends Command
             return;
         }
 
-        $this->info('  Found ' . count($places) . ' places. Processing...');
+        // Sort by rating DESC, then review count DESC — highest-value leads first
+        usort($places, function (array $a, array $b) {
+            $ratingCmp = ($b['rating'] ?? 0) <=> ($a['rating'] ?? 0);
+            if ($ratingCmp !== 0) {
+                return $ratingCmp;
+            }
+            return ($b['user_ratings_total'] ?? 0) <=> ($a['user_ratings_total'] ?? 0);
+        });
 
-        $saved   = 0;
-        $skipped = 0;
+        $this->info('  Found ' . count($places) . ' places (sorted by rating/reviews). Processing...');
+
+        $saved       = 0;
+        $skipped     = 0;
+        $categoryNew = 0;
 
         foreach ($places as $place) {
-            // Hard stop before the costly Details API call
+            // Hard stop: global daily limit OR per-category cap
             if ($this->limitReached()) {
-                $this->warn('  Daily limit reached mid-category. Stopping to prevent excess API charges.');
-                Log::info('CollectLeads: limit reached mid-category, breaking.', [
+                $this->warn('  Daily limit reached mid-category. Stopping.');
+                Log::info('CollectLeads: daily limit reached mid-category.', [
                     'category'  => $category,
                     'new_today' => $this->newLeadsToday,
+                ]);
+                break;
+            }
+
+            if ($categoryNew >= $perCategoryLimit) {
+                $this->warn("  Per-category limit ({$perCategoryLimit}) reached for: {$category}");
+                Log::info('CollectLeads: per-category limit reached.', [
+                    'category'          => $category,
+                    'category_new'      => $categoryNew,
+                    'per_category_limit' => $perCategoryLimit,
                 ]);
                 break;
             }
@@ -173,13 +204,15 @@ class CollectLeads extends Command
 
             $saved++;
 
-            // Only new DB inserts count against the daily quota
+            // Only new DB inserts count against the daily quota and category cap
             if ($lead->wasRecentlyCreated) {
                 $this->newLeadsToday++;
-                Log::info('CollectLeads: new lead counted against daily limit', [
-                    'lead_id'   => $lead->id,
-                    'new_today' => $this->newLeadsToday,
-                    'limit'     => $this->dailyLimit,
+                $categoryNew++;
+                Log::info('CollectLeads: new lead counted against limits', [
+                    'lead_id'      => $lead->id,
+                    'new_today'    => $this->newLeadsToday,
+                    'category_new' => $categoryNew,
+                    'limit'        => $this->dailyLimit,
                 ]);
             }
 
@@ -191,13 +224,16 @@ class CollectLeads extends Command
 
         $this->info(
             "  Done — saved: {$saved}, skipped (has website): {$skipped}" .
+            " | new this category: {$categoryNew}/{$perCategoryLimit}" .
             " | new today: {$this->newLeadsToday}/{$this->dailyLimit}"
         );
         Log::info('CollectLeads: category done', [
-            'category'        => $category,
-            'saved'           => $saved,
-            'skipped'         => $skipped,
-            'new_leads_today' => $this->newLeadsToday,
+            'category'          => $category,
+            'saved'             => $saved,
+            'skipped'           => $skipped,
+            'category_new'      => $categoryNew,
+            'per_category_limit' => $perCategoryLimit,
+            'new_leads_today'   => $this->newLeadsToday,
         ]);
     }
 

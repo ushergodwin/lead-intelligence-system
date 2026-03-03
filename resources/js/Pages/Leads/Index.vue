@@ -1,7 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { ref, reactive } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { ref, reactive, computed } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
@@ -24,6 +24,10 @@ const toast = Swal.mixin({
     timerProgressBar:   true,
     customClass: { popup: 'shadow-sm' },
 });
+
+const page = usePage();
+const role = computed(() => page.props.auth?.role);
+const canManage = computed(() => role.value === 'super_admin' || role.value === 'manager');
 
 const props = defineProps({
     leads:      { type: Object, required: true },
@@ -54,6 +58,7 @@ const filters = reactive({
     approved:   props.filters.approved   ?? '',
     contacted:  props.filters.contacted  ?? '',
     has_mobile: props.filters.has_mobile ?? '',
+    archived:   props.filters.archived   ?? '',
     category:   props.filters.category   ?? '',
     sort:       props.filters.sort       ?? 'created_at',
     direction:  props.filters.direction  ?? 'desc',
@@ -69,7 +74,7 @@ const applyFilters = () => {
 const resetFilters = () => {
     Object.assign(filters, {
         search: '', high_score: '', approved: '',
-        contacted: '', has_mobile: '', category: '', sort: 'created_at', direction: 'desc',
+        contacted: '', has_mobile: '', archived: '', category: '', sort: 'created_at', direction: 'desc',
     });
     router.get(route('leads.index'));
 };
@@ -204,6 +209,37 @@ const deleteLead = async (lead) => {
     }
 };
 
+// ---- Archive / Unarchive ----
+const archiveLead = async (lead) => {
+    const result = await dialog.fire({
+        title:             'Archive Lead?',
+        html:              `<strong>${lead.business_name}</strong> will be hidden from the active leads list.`,
+        icon:              'warning',
+        showCancelButton:  true,
+        confirmButtonText: '<i class="fas fa-archive me-1"></i> Archive',
+        cancelButtonText:  'Cancel',
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        await axios.patch(route('leads.archive', lead.id));
+        toast.fire({ icon: 'success', title: 'Lead archived.' });
+        router.reload({ only: ['leads'] });
+    } catch {
+        toast.fire({ icon: 'error', title: 'Could not archive lead.' });
+    }
+};
+
+const unarchiveLead = async (lead) => {
+    try {
+        await axios.patch(route('leads.unarchive', lead.id));
+        toast.fire({ icon: 'success', title: 'Lead restored from archive.' });
+        router.reload({ only: ['leads'] });
+    } catch {
+        toast.fire({ icon: 'error', title: 'Could not restore lead.' });
+    }
+};
+
 // ---- Score badge ----
 const scoreBadgeClass = (score) => {
     if (!score) return 'badge badge-score-none';
@@ -220,7 +256,12 @@ const scoreBadgeClass = (score) => {
 
         <!-- Header -->
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h4 class="fw-bold mb-0">Leads</h4>
+            <h4 class="fw-bold mb-0">
+                Leads
+                <span v-if="filters.archived" class="badge bg-secondary ms-2 fw-normal" style="font-size:.75rem">
+                    <i class="fas fa-archive me-1"></i>Archived
+                </span>
+            </h4>
             <span class="badge bg-secondary">{{ leads.total }} total</span>
         </div>
 
@@ -268,6 +309,12 @@ const scoreBadgeClass = (score) => {
                             <input class="form-check-input" type="checkbox" v-model="filters.has_mobile" value="1" id="fMobile">
                             <label class="form-check-label small" for="fMobile">
                                 <i class="fas fa-mobile-alt me-1 text-success"></i>Has Mobile
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline mb-0">
+                            <input class="form-check-input" type="checkbox" v-model="filters.archived" value="1" id="fArchived">
+                            <label class="form-check-label small" for="fArchived">
+                                <i class="fas fa-archive me-1 text-secondary"></i>Archived
                             </label>
                         </div>
                     </div>
@@ -356,6 +403,22 @@ const scoreBadgeClass = (score) => {
                                             :title="lead.sms_sent_at ? 'SMS already sent' : 'Send SMS'"
                                         >
                                             <i class="fas fa-sms"></i>
+                                        </button>
+                                        <button
+                                            v-if="canManage && !lead.archived_at"
+                                            @click="archiveLead(lead)"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            title="Archive"
+                                        >
+                                            <i class="fas fa-archive"></i>
+                                        </button>
+                                        <button
+                                            v-if="canManage && lead.archived_at"
+                                            @click="unarchiveLead(lead)"
+                                            class="btn btn-sm btn-secondary"
+                                            title="Restore from Archive"
+                                        >
+                                            <i class="fas fa-undo"></i>
                                         </button>
                                         <button @click="deleteLead(lead)" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
