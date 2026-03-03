@@ -1,0 +1,276 @@
+/* ============================================================
+   Lead Intelligence System — Global Styles
+   B2B Sales Intelligence / Outreach Automation Theme
+   ============================================================ */
+
+/* ---- Bootstrap CSS variable overrides (richer brand palette) ---- */
+:root {
+    --bs-primary:            #1d4ed8;
+    --bs-primary-rgb:        29, 78, 216;
+    --bs-link-color:         #1d4ed8;
+    --bs-link-hover-color:   #1e40af;
+    --bs-btn-border-radius:  0.45rem;
+    --bs-card-border-radius: 0.6rem;
+
+    /* App layout */
+    --sidebar-width:  250px;
+    --navbar-height:  56px;
+    --sidebar-bg:     #0f172a;
+    --sidebar-accent: #1d4ed8;
+    --sidebar-text:   #94a3b8;
+    --body-bg:        #f1f5f9;
+    --primary:        #1d4ed8;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--body-bg);
+    color: #1e293b;
+}
+
+/* ---- Override Bootstrap primary button ---- */
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color:     var(--bs-primary);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #1e40af;
+    border-color:     #1e40af;
+}
+.btn-outline-primary {
+    color:        var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    border-color:     var(--bs-primary);
+}
+.text-primary { color: var(--bs-primary) !important; }
+
+/* ---- Sidebar ---- */
+.sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background-color: var(--sidebar-bg);
+    transition: width 0.25s ease;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1030;
+    border-right: 1px solid rgba(255,255,255,0.04);
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar .brand {
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.sidebar .brand i {
+    min-width: 28px;
+    font-size: 1.2rem;
+    color: var(--sidebar-accent);
+}
+
+.sidebar-section-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #475569;
+    padding: 1rem 1rem 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-text);
+    padding: 0.6rem 1rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin: 1px 8px;
+    border-radius: 6px;
+}
+
+.sidebar .nav-link i {
+    min-width: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255,255,255,0.06);
+    color: #e2e8f0;
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(29,78,216,0.25);
+    color: #93c5fd;
+    border-left: none;
+}
+
+.sidebar .nav-link.active i {
+    color: #60a5fa;
+    opacity: 1;
+}
+
+/* ---- Main area ---- */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.25s ease;
+}
+
+.main-wrapper.sidebar-collapsed {
+    margin-left: 60px;
+}
+
+.top-navbar {
+    height: var(--navbar-height);
+    background-color: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.page-content {
+    padding: 1.5rem;
+}
+
+/* ---- Cards ---- */
+.card {
+    border-radius: var(--bs-card-border-radius);
+    border-color: #e2e8f0;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.9rem;
+}
+
+/* ---- KPI Cards ---- */
+.kpi-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: transform 0.18s, box-shadow 0.18s;
+    background: #fff;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.kpi-card .kpi-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+/* ---- Score badges ---- */
+.badge-score-high   { background-color: #16a34a; color: #fff; border-radius: 6px; }
+.badge-score-medium { background-color: #ea580c; color: #fff; border-radius: 6px; }
+.badge-score-low    { background-color: #dc2626; color: #fff; border-radius: 6px; }
+.badge-score-none   { background-color: #64748b; color: #fff; border-radius: 6px; }
+
+/* ---- Table ---- */
+.table-leads th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    background-color: #f8fafc;
+}
+
+.table-leads tbody tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* ---- Auth page ---- */
+.auth-page {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+    background-attachment: fixed;
+}
+
+.auth-card {
+    max-width: 440px;
+    border-radius: 16px;
+    background: #fff;
+}
+
+.auth-brand-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, var(--bs-primary) 0%, #7c3aed 100%);
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(29,78,216,0.4);
+}
+
+/* Form controls — slightly elevated style */
+.form-control, .form-select {
+    border-color: #cbd5e1;
+    border-radius: 0.45rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.12);
+}
+
+/* ---- SweetAlert2 integration ---- */
+.swal2-popup {
+    border-radius: 12px !important;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
+.swal2-actions {
+    gap: 0.5rem;
+}
+
+/* ---- Cursor helper ---- */
+.cursor-pointer { cursor: pointer; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .main-wrapper { margin-left: 60px; }
+    .sidebar .brand span,
+    .sidebar .nav-link span,
+    .sidebar-section-label { display: none; }
+}
