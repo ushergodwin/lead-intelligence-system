@@ -73,6 +73,7 @@ class OutreachService
     {
         OutreachLog::create([
             'lead_id'  => $lead->id,
+            'channel'  => 'email',
             'email'    => $email,
             'status'   => $status,
             'response' => $response,

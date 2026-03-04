@@ -30,3 +30,10 @@ Schedule::command('leads:send-followup-reminders')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/followup-reminders.log'));
+
+// Auto-send SMS to approved leads and follow-ups every day at 10:00 AM
+Schedule::command('leads:send-sms')
+    ->dailyAt('10:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/send-sms.log'));

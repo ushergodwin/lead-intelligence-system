@@ -11,6 +11,14 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Lead Intelligence System';
 
+// Apply saved theme before first render to avoid flash
+(function () {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = saved ? saved === 'dark' : prefersDark;
+    document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+})();
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>

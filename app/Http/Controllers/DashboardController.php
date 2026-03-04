@@ -16,10 +16,10 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard/Index', [
             'stats' => [
-                'total_leads'      => Lead::count(),
-                'high_score_leads' => Lead::highScore($minScore)->count(),
-                'approved_leads'   => Lead::approved()->count(),
-                'contacted_leads'  => Lead::contacted()->count(),
+                'total_leads'       => Lead::active()->count(),
+                'high_score_leads'  => Lead::active()->highScore($minScore)->count(),
+                'approved_leads'    => Lead::active()->approved()->count(),
+                'contacted_leads'   => Lead::active()->contacted()->count(),
                 'emails_sent_today' => OutreachLog::where('status', 'sent')
                     ->whereDate('sent_at', today())
                     ->count(),

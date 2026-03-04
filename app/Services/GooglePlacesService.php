@@ -22,9 +22,11 @@ class GooglePlacesService
     /**
      * Search places by text query. Handles pagination via next_page_token.
      *
+     * @param  int|null $maxResults  Stop fetching pages once this many candidates are collected.
+     *                               Null (default) fetches all available pages.
      * @return array<int, array<string, mixed>>
      */
-    public function textSearch(string $query): array
+    public function textSearch(string $query, ?int $maxResults = null): array
     {
         $results   = [];
         $pageToken = null;
@@ -50,6 +52,16 @@ class GooglePlacesService
                 $body      = $response->json();
                 $results   = array_merge($results, $body['results'] ?? []);
                 $pageToken = $body['next_page_token'] ?? null;
+
+                // Stop early if we already have enough candidates
+                if ($maxResults !== null && count($results) >= $maxResults) {
+                    Log::debug('GooglePlacesService::textSearch: candidate cap reached, stopping pagination.', [
+                        'query'       => $query,
+                        'collected'   => count($results),
+                        'max_results' => $maxResults,
+                    ]);
+                    break;
+                }
 
             } catch (RequestException $e) {
                 Log::error('GooglePlacesService::textSearch HTTP error', [
@@ -78,7 +90,7 @@ class GooglePlacesService
      */
     public function getDetails(string $placeId): ?array
     {
-        $fields = 'name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,url';
+        $fields = 'name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,url,reviews';
 
         try {
             $response = Http::timeout(self::TIMEOUT)

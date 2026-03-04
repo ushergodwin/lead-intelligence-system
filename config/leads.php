@@ -24,10 +24,25 @@ return [
     |--------------------------------------------------------------------------
     */
     'default_categories' => [
-        'schools Kampala',
-        'hardware shops Kampala',
-        'clinics Kampala',
-        'hotels Kampala',
+        // Tourism
+        'tour operators Kampala',
+        'travel agencies Kampala',
+        'safari companies Uganda',
+
+        // Restaurants
+        'restaurants Kampala',
+        'cafes Kampala',
+        'fine dining Kampala',
+
+        // Airbnb / Rentals
+        'Airbnb Kampala',
+        'serviced apartments Kampala',
+        'short stay apartments Kampala',
+
+        // Logistics
+        'logistics company Kampala',
+        'clearing and forwarding Kampala',
+        'delivery services Kampala',
     ],
 
     /*
@@ -46,6 +61,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'daily_email_limit' => (int) env('OUTREACH_DAILY_LIMIT', 20),
+    'daily_sms_limit'   => (int) env('OUTREACH_SMS_DAILY_LIMIT', 30),
     'min_delay_seconds' => (int) env('OUTREACH_MIN_DELAY', 20),
     'max_delay_seconds' => (int) env('OUTREACH_MAX_DELAY', 60),
     'min_ai_score'      => (int) env('OUTREACH_MIN_AI_SCORE', 7),
@@ -56,6 +72,14 @@ return [
     |--------------------------------------------------------------------------
     */
     'follow_up_days'               => (int) env('FOLLOW_UP_DAYS', 4),
+    'sms_follow_up_days'           => (int) env('SMS_FOLLOW_UP_DAYS', 3),
     'follow_up_notification_email' => env('FOLLOW_UP_NOTIFICATION_EMAIL', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Lead Filtering
+    |--------------------------------------------------------------------------
+    */
+    'min_review_year' => (int) env('LEADS_MIN_REVIEW_YEAR', 0),
 
 ];

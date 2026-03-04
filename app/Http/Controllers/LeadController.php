@@ -47,6 +47,10 @@ class LeadController extends Controller
             $query->where('contacted', true);
         }
 
+        if ($request->boolean('not_contacted')) {
+            $query->where('contacted', false);
+        }
+
         if ($category = $request->input('category')) {
             $query->where('category', $category);
         }
@@ -81,7 +85,7 @@ class LeadController extends Controller
         return Inertia::render('Leads/Index', [
             'leads'      => $leads,
             'categories' => $categories,
-            'filters'    => $request->only(['search', 'high_score', 'approved', 'contacted', 'category', 'sort', 'direction', 'has_mobile', 'archived']),
+            'filters'    => $request->only(['search', 'high_score', 'approved', 'contacted', 'not_contacted', 'category', 'sort', 'direction', 'has_mobile', 'archived']),
         ]);
     }
 

@@ -10,7 +10,7 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@leadintel.local'],
             [
                 'name'              => 'Admin',
@@ -18,6 +18,8 @@ class AdminUserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $admin->syncRoles(['super_admin']);
 
         $this->command->info('Admin user created: admin@leadintel.local / password');
     }

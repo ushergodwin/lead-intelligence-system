@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -35,14 +36,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Leads — JSON actions (all roles can read; manager+ to act)
     Route::prefix('leads')->name('leads.')->group(function () {
+        // Static routes MUST be defined before parameterized /{lead} routes
+        Route::post('/',                   [LeadController::class, 'store'])->name('store');
+        Route::get('/export/csv',          [LeadController::class, 'exportCsv'])->name('export.csv');
+        Route::post('/bulk/approve',       [LeadController::class, 'bulkApprove'])->name('bulk.approve');
+        Route::post('/bulk/archive',       [LeadController::class, 'bulkArchive'])->name('bulk.archive');
+        Route::post('/bulk/delete',        [LeadController::class, 'bulkDelete'])->name('bulk.delete');
+
+        // Parameterized routes
         Route::get('/{lead}',              [LeadController::class, 'show'])->name('show');
+        Route::patch('/{lead}',            [LeadController::class, 'update'])->name('update');
         Route::patch('/{lead}/approve',    [LeadController::class, 'approve'])->name('approve');
         Route::patch('/{lead}/archive',    [LeadController::class, 'archive'])->name('archive');
         Route::patch('/{lead}/unarchive',  [LeadController::class, 'unarchive'])->name('unarchive');
+        Route::patch('/{lead}/notes',      [LeadController::class, 'updateNotes'])->name('notes.update');
+        Route::post('/{lead}/rescore',     [LeadController::class, 'rescore'])->name('rescore');
         Route::post('/{lead}/send-email',  [LeadController::class, 'sendEmail'])->name('send-email');
         Route::post('/{lead}/send-sms',    [LeadController::class, 'sendSms'])->name('send-sms');
         Route::delete('/{lead}',           [LeadController::class, 'destroy'])->name('destroy');
     });
+
+    // Outreach logs
+    Route::post('/logs/{log}/retry', [LogController::class, 'retry'])->name('logs.retry');
 
     // Settings — super_admin only (enforced inside controller)
     Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');

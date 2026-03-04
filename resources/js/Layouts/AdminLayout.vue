@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 
 const page = usePage();
@@ -11,6 +11,24 @@ const canManage    = computed(() => role.value === 'super_admin' || role.value =
 
 const sidebarCollapsed  = ref(false);
 const userMenuOpen      = ref(false);
+const isDark            = ref(false);
+
+const applyTheme = (dark) => {
+    document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+};
+
+const toggleTheme = () => {
+    isDark.value = !isDark.value;
+    localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
+    applyTheme(isDark.value);
+};
+
+onMounted(() => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    isDark.value = saved ? saved === 'dark' : prefersDark;
+    applyTheme(isDark.value);
+});
 
 const toggleUserMenu = () => { userMenuOpen.value = !userMenuOpen.value; };
 const closeUserMenu  = () => { userMenuOpen.value = false; };
@@ -62,7 +80,7 @@ const getHref = (item) => {
         <nav class="sidebar" :class="{ collapsed: sidebarCollapsed }">
             <!-- Brand -->
             <a href="#" class="brand">
-                <img src="/img/logo.png" alt="LeadIntel" style="width:28px;height:28px;object-fit:contain;flex-shrink:0">
+                <img src="/img/logo.png" alt="LeadIntel" class="sidebar-logo">
                 <span class="ms-2">LeadIntel</span>
             </a>
 
@@ -99,11 +117,16 @@ const getHref = (item) => {
                 <h6 class="mb-0 fw-semibold text-muted">
                     <slot name="title">Dashboard</slot>
                 </h6>
-                <div class="ms-auto d-flex align-items-center">
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <!-- Dark mode toggle -->
+                    <button class="btn-theme-toggle" @click="toggleTheme" :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+                        <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'" style="font-size:.8rem"></i>
+                    </button>
+
                     <!-- User profile dropdown -->
                     <div class="dropdown" v-click-outside="closeUserMenu">
                         <button
-                            class="btn btn-sm d-flex align-items-center gap-2 px-2 py-1 rounded-3"
+                            class="btn btn-sm d-flex align-items-center gap-2 px-2 py-1 rounded-3 user-menu-btn"
                             style="background:rgba(0,0,0,.04); border:1px solid #e2e8f0"
                             @click="toggleUserMenu"
                         >

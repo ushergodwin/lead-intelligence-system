@@ -29,7 +29,9 @@ class SettingController extends Controller
 
         Setting::set('daily_leads_limit', (string) $data['daily_leads_limit']);
         Setting::set('daily_email_limit', (string) $data['daily_email_limit']);
+        Setting::set('daily_sms_limit',   (string) $data['daily_sms_limit']);
         Setting::set('min_ai_score',      (string) $data['min_ai_score']);
+        Setting::set('min_review_year',   (string) $data['min_review_year']);
         Setting::set('search_categories', json_encode($data['search_categories']));
 
         foreach (self::SIGNATURE_KEYS as $key) {
@@ -37,7 +39,13 @@ class SettingController extends Controller
         }
 
         Setting::set('follow_up_days',               (string) $data['follow_up_days']);
+        Setting::set('sms_follow_up_days',           (string) $data['sms_follow_up_days']);
         Setting::set('follow_up_notification_email', $data['follow_up_notification_email']);
+
+        Setting::set('email_subject_template', $data['email_subject_template']);
+        Setting::set('email_body_template',    $data['email_body_template']);
+        Setting::set('sms_body_template',      $data['sms_body_template']);
+        Setting::set('sms_follow_up_template', $data['sms_follow_up_template']);
 
         return response()->json(['message' => 'Settings saved successfully.']);
     }

@@ -1,7 +1,21 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { reactive, computed, ref } from 'vue';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+
+const toast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false,
+    timer: 3000, timerProgressBar: true,
+    customClass: { popup: 'shadow-sm' },
+});
+
+const page = usePage();
+const canManage = computed(() => {
+    const r = page.props.auth?.role;
+    return r === 'super_admin' || r === 'manager';
+});
 
 const props = defineProps({
     logs:    { type: Object, required: true },
@@ -33,6 +47,19 @@ const statusBadge = (status) => {
 const formatDate = (dt) => {
     if (!dt) return '—';
     return new Date(dt).toLocaleString();
+};
+
+const retrying = ref(null);
+const retryLog = async (log) => {
+    retrying.value = log.id;
+    try {
+        const res = await axios.post(route('logs.retry', log.id));
+        toast.fire({ icon: 'success', title: res.data.message });
+    } catch (e) {
+        toast.fire({ icon: 'error', title: e.response?.data?.message ?? 'Retry failed.' });
+    } finally {
+        retrying.value = null;
+    }
 };
 </script>
 
@@ -75,16 +102,27 @@ const formatDate = (dt) => {
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-3">Business</th>
+                                <th>Channel</th>
                                 <th>Email</th>
                                 <th>Status</th>
                                 <th>Response</th>
                                 <th>Sent At</th>
+                                <th v-if="canManage" class="text-end pe-3">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="log in logs.data" :key="log.id">
                                 <td class="ps-3">{{ log.lead?.business_name ?? '—' }}</td>
-                                <td>{{ log.email }}</td>
+                                <td>
+                                    <span v-if="log.channel === 'email'" class="badge bg-light text-dark border">
+                                        <i class="fas fa-envelope me-1 text-info"></i>Email
+                                    </span>
+                                    <span v-else-if="log.channel === 'sms'" class="badge bg-light text-dark border">
+                                        <i class="fas fa-sms me-1 text-success"></i>SMS
+                                    </span>
+                                    <span v-else class="text-muted small">—</span>
+                                </td>
+                                <td>{{ log.email ?? '—' }}</td>
                                 <td><span :class="statusBadge(log.status)">{{ log.status }}</span></td>
                                 <td>
                                     <span class="text-muted small text-truncate d-inline-block" style="max-width:200px">
@@ -92,9 +130,21 @@ const formatDate = (dt) => {
                                     </span>
                                 </td>
                                 <td class="text-muted small">{{ formatDate(log.sent_at) }}</td>
+                                <td v-if="canManage" class="text-end pe-3">
+                                    <button
+                                        v-if="log.status === 'failed' && log.channel === 'email'"
+                                        @click="retryLog(log)"
+                                        :disabled="retrying === log.id"
+                                        class="btn btn-sm btn-outline-warning"
+                                        title="Re-queue this email"
+                                    >
+                                        <span v-if="retrying === log.id" class="spinner-border spinner-border-sm"></span>
+                                        <i v-else class="fas fa-redo"></i>
+                                    </button>
+                                </td>
                             </tr>
                             <tr v-if="!logs.data.length">
-                                <td colspan="5" class="text-center py-4 text-muted">
+                                <td :colspan="canManage ? 7 : 6" class="text-center py-4 text-muted">
                                     <i class="fas fa-inbox fa-2x d-block mb-2 opacity-25"></i>
                                     No log entries found.
                                 </td>

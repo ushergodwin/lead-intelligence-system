@@ -162,34 +162,7 @@
         <!-- ===== BODY ===== -->
         <div class="body">
 
-            <p>Hello <strong>{{ $lead->business_name }}</strong> Team,</p>
-
-            <p>
-                I noticed your business has strong visibility on Google with
-                <strong>{{ number_format($lead->reviews_count ?? 0) }} reviews</strong>
-                and a <strong>{{ $lead->rating ?? 'N/A' }} star</strong> rating — that's impressive.
-            </p>
-
-            <p>However, I couldn't find a website for your business.</p>
-
-            <!-- Highlight box -->
-            <div class="highlight-box">
-                <strong>Did you know?</strong> Businesses with a website receive up to
-                <strong>70% more inquiries</strong> than those without one.
-            </div>
-
-            <p>Many customers search online before calling or visiting. A simple, mobile-friendly website can help you:</p>
-
-            <ul>
-                <li>Appear more professional and trustworthy</li>
-                <li>Receive more direct inquiries and bookings</li>
-                <li>Increase trust from new customers</li>
-                <li>Rank better in Google search results</li>
-            </ul>
-
-            <p>We specialise in helping Ugandan businesses establish a strong online presence at affordable cost.</p>
-
-            <p>Would you be open to a quick conversation this week?</p>
+            {!! $emailBody !!}
 
             <!-- CTA button -->
             @if($companyEmail)

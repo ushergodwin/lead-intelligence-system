@@ -32,10 +32,16 @@ class CollectLeads extends Command
         parent::__construct();
     }
 
+    /**
+     * Minimum review year for a lead to be collected (0 = no filter).
+     */
+    private int $minReviewYear = 0;
+
     public function handle(): int
     {
         $this->dailyLimit    = $this->resolveDailyLimit();
         $this->newLeadsToday = Lead::whereDate('created_at', today())->count();
+        $this->minReviewYear = (int) Setting::get('min_review_year', 0);
 
         $this->info("Daily leads limit : {$this->dailyLimit}");
         $this->info("New leads today   : {$this->newLeadsToday}");
@@ -133,7 +139,9 @@ class CollectLeads extends Command
             'per_category_limit' => $perCategoryLimit,
         ]);
 
-        $places = $this->places->textSearch($category);
+        // Fetch at most 3× the per-category limit as candidates (allows for skips/duplicates)
+        $candidateCap = $perCategoryLimit * 3;
+        $places = $this->places->textSearch($category, $candidateCap);
 
         if (empty($places)) {
             $this->warn("  No results for: {$category}");
@@ -196,6 +204,20 @@ class CollectLeads extends Command
                 continue;
             }
 
+            // Skip leads whose most recent review is older than the configured minimum year
+            if ($this->minReviewYear > 0) {
+                $lastReviewYear = $this->extractLastReviewYear($details);
+                if ($lastReviewYear !== null && $lastReviewYear < $this->minReviewYear) {
+                    Log::debug('CollectLeads: skipping — review too old', [
+                        'place_id'        => $placeId,
+                        'last_review_year' => $lastReviewYear,
+                        'min_review_year'  => $this->minReviewYear,
+                    ]);
+                    $skipped++;
+                    continue;
+                }
+            }
+
             $lead = $this->storeLead($category, $details);
 
             if (!$lead) {
@@ -253,12 +275,13 @@ class CollectLeads extends Command
                     'address'       => $address,
                 ],
                 [
-                    'category'        => $category,
-                    'phone'           => $details['formatted_phone_number'] ?? null,
-                    'google_maps_url' => $details['url'] ?? '',
-                    'rating'          => $details['rating'] ?? null,
-                    'reviews_count'   => $details['user_ratings_total'] ?? null,
-                    'website'         => $details['website'] ?? null,
+                    'category'         => $category,
+                    'phone'            => $details['formatted_phone_number'] ?? null,
+                    'google_maps_url'  => $details['url'] ?? '',
+                    'rating'           => $details['rating'] ?? null,
+                    'reviews_count'    => $details['user_ratings_total'] ?? null,
+                    'last_review_year' => $this->extractLastReviewYear($details),
+                    'website'          => $details['website'] ?? null,
                 ]
             );
         } catch (\Throwable $e) {
@@ -269,5 +292,29 @@ class CollectLeads extends Command
             ]);
             return null;
         }
+    }
+
+    /**
+     * Extract the year of the most recent review from the Places Details response.
+     * The reviews array contains objects with a `time` field (Unix timestamp).
+     * Google returns up to 5 most recent reviews; we take the max timestamp.
+     */
+    private function extractLastReviewYear(array $details): ?int
+    {
+        $reviews = $details['reviews'] ?? [];
+
+        if (empty($reviews)) {
+            return null;
+        }
+
+        $maxTime = 0;
+        foreach ($reviews as $review) {
+            $time = $review['time'] ?? 0;
+            if ($time > $maxTime) {
+                $maxTime = $time;
+            }
+        }
+
+        return $maxTime > 0 ? (int) date('Y', $maxTime) : null;
     }
 }

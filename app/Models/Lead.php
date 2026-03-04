@@ -15,6 +15,7 @@ class Lead extends Model
         'category',
         'address',
         'phone',
+        'email',
         'google_maps_url',
         'rating',
         'reviews_count',
@@ -26,19 +27,27 @@ class Lead extends Model
         'follow_up_due_at',
         'follow_up_sent',
         'sms_sent_at',
+        'sms_follow_up_due_at',
+        'sms_follow_up_sent',
+        'last_review_year',
         'archived_at',
+        'notes',
     ];
 
     protected $casts = [
-        'rating'               => 'decimal:1',
-        'ai_score'             => 'integer',
-        'reviews_count'        => 'integer',
+        'rating'                => 'decimal:1',
+        'ai_score'              => 'integer',
+        'reviews_count'         => 'integer',
+        'last_review_year'      => 'integer',
         'approved_for_outreach' => 'boolean',
-        'contacted'            => 'boolean',
-        'follow_up_due_at'     => 'datetime',
-        'follow_up_sent'       => 'boolean',
-        'sms_sent_at'          => 'datetime',
-        'archived_at'          => 'datetime',
+        'contacted'             => 'boolean',
+        'follow_up_due_at'      => 'datetime',
+        'follow_up_sent'        => 'boolean',
+        'sms_sent_at'           => 'datetime',
+        'sms_follow_up_due_at'  => 'datetime',
+        'sms_follow_up_sent'    => 'boolean',
+        'archived_at'           => 'datetime',
+        'notes'                 => 'string',
     ];
 
     // -------------------------------------------------------------------------
@@ -97,5 +106,28 @@ class Lead extends Model
                      ->where('follow_up_sent', false)
                      ->whereNotNull('follow_up_due_at')
                      ->where('follow_up_due_at', '<=', now());
+    }
+
+    /**
+     * Approved leads not yet contacted via SMS.
+     */
+    public function scopeReadyForSmsOutreach($query)
+    {
+        return $query->whereNull('archived_at')
+                     ->where('approved_for_outreach', true)
+                     ->where('contacted', false)
+                     ->whereNull('sms_sent_at');
+    }
+
+    /**
+     * Leads whose SMS follow-up is due and not yet sent.
+     */
+    public function scopeSmsFollowUpDue($query)
+    {
+        return $query->whereNull('archived_at')
+                     ->whereNotNull('sms_sent_at')
+                     ->where('sms_follow_up_sent', false)
+                     ->whereNotNull('sms_follow_up_due_at')
+                     ->where('sms_follow_up_due_at', '<=', now());
     }
 }
