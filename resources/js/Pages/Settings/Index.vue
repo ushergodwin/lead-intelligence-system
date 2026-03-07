@@ -21,6 +21,7 @@ const form = reactive({
     daily_sms_limit:              props.settings.daily_sms_limit      ?? 30,
     min_ai_score:                 props.settings.min_ai_score,
     min_review_year:              props.settings.min_review_year      ?? 0,
+    min_reviews_count:            props.settings.min_reviews_count    ?? 10,
     search_categories:            [...(props.settings.search_categories ?? [])],
     company_name:                 props.settings.company_name         ?? '',
     sender_name:                  props.settings.sender_name          ?? '',
@@ -192,6 +193,26 @@ const submit = async () => {
                                     {{ errors.min_ai_score }}
                                 </div>
                                 <div class="form-text">Leads below this score will not be sent outreach (1–10).</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Min Reviews Count</label>
+                                <input
+                                    v-model.number="form.min_reviews_count"
+                                    type="number"
+                                    min="0"
+                                    max="10000"
+                                    class="form-control"
+                                    :class="{ 'is-invalid': errors.min_reviews_count }"
+                                    placeholder="10"
+                                />
+                                <div v-if="errors.min_reviews_count" class="invalid-feedback">
+                                    {{ errors.min_reviews_count }}
+                                </div>
+                                <div class="form-text">
+                                    Only collect leads with at least this many Google reviews.
+                                    Set to <code>0</code> to disable.
+                                </div>
                             </div>
 
                             <div class="mb-0">
@@ -518,7 +539,8 @@ const submit = async () => {
                                         <code>{business_name}</code>
                                         <code>{reviews_label}</code>
                                         <code>{signature}</code>
-                                        — max 500 chars.
+                                        <code>{cta}</code>
+                                        — max 500 chars. <code>{cta}</code> expands to Call/WhatsApp lines from your contact details.
                                     </div>
                                     <span
                                         class="badge ms-2 flex-shrink-0"
@@ -550,7 +572,7 @@ const submit = async () => {
                                 </div>
                                 <div class="d-flex justify-content-between align-items-start mt-1">
                                     <div class="form-text">
-                                        Sent automatically after the SMS follow-up delay. Same placeholders as above.
+                                        Sent automatically after the SMS follow-up delay. Supports: <code>{business_name}</code> <code>{signature}</code> <code>{cta}</code>
                                     </div>
                                     <span
                                         class="badge ms-2 flex-shrink-0"

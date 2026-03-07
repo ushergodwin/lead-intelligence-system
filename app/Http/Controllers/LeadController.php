@@ -83,9 +83,16 @@ class LeadController extends Controller
         $categories = Lead::select('category')->distinct()->pluck('category');
 
         return Inertia::render('Leads/Index', [
-            'leads'      => $leads,
-            'categories' => $categories,
-            'filters'    => $request->only(['search', 'high_score', 'approved', 'contacted', 'not_contacted', 'category', 'sort', 'direction', 'has_mobile', 'archived']),
+            'leads'       => $leads,
+            'categories'  => $categories,
+            'filters'     => $request->only(['search', 'high_score', 'approved', 'contacted', 'not_contacted', 'category', 'sort', 'direction', 'has_mobile', 'archived']),
+            'smsSettings' => [
+                'template'         => Setting::get('sms_body_template', "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}"),
+                'sender_name'      => Setting::get('sender_name', ''),
+                'company_name'     => Setting::get('company_name', config('app.name')),
+                'company_phone'    => Setting::get('company_phone', ''),
+                'company_whatsapp' => Setting::get('company_whatsapp', ''),
+            ],
         ]);
     }
 
@@ -129,18 +136,34 @@ class LeadController extends Controller
         }
 
         $companyName  = Setting::get('company_name', config('app.name'));
+        $senderName   = Setting::get('sender_name', '');
         $companyPhone = Setting::get('company_phone', '');
+        $whatsapp     = Setting::get('company_whatsapp', '');
         $reviews      = $lead->reviews_count ?? 0;
         $reviewsLabel = $reviews === 1 ? '1 Google review' : "{$reviews} Google reviews";
 
-        $signature = "- {$companyName}";
-        if ($companyPhone) {
-            $signature .= " | {$companyPhone}";
-        }
+        $signature = $senderName ? "- {$senderName}, {$companyName}" : "- {$companyName}";
 
-        $message = "Hello {$lead->business_name}, We saw your {$reviewsLabel} - that's impressive. "
-                 . "A simple website could help convert more search traffic into sales. "
-                 . "Can we share a quick idea with you? {$signature}";
+        $ctaParts = [];
+        if ($companyPhone) {
+            $ctaParts[] = "Call: {$companyPhone}";
+        }
+        if ($whatsapp) {
+            $waNumber   = preg_replace('/\D/', '', $whatsapp);
+            $ctaParts[] = "WhatsApp: https://wa.me/{$waNumber}";
+        }
+        $cta = implode("\n", $ctaParts);
+
+        $smsTemplate = Setting::get(
+            'sms_body_template',
+            "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}"
+        );
+
+        $message = str_replace(
+            ['{business_name}', '{reviews_label}', '{signature}', '{cta}'],
+            [$lead->business_name, $reviewsLabel, $signature, $cta],
+            $smsTemplate
+        );
 
         $number  = PhoneHelper::normalize($lead->phone);
         $success = SmsService::send($number, $message);
@@ -155,7 +178,13 @@ class LeadController extends Controller
         ]);
 
         if ($success) {
-            $lead->update(['sms_sent_at' => now()]);
+            $followUpDays = (int) Setting::get('sms_follow_up_days', config('leads.sms_follow_up_days', 3));
+            $lead->update([
+                'contacted'            => true,
+                'sms_sent_at'          => now(),
+                'sms_follow_up_due_at' => now()->addDays($followUpDays),
+                'sms_follow_up_sent'   => false,
+            ]);
             return response()->json(['message' => 'SMS sent successfully.', 'sms_sent_at' => $lead->sms_sent_at]);
         }
 

@@ -11,16 +11,16 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $admin = User::updateOrCreate(
-            ['email' => 'admin@leadintel.local'],
+            ['email' => 'leadintel@razertechnology.com'],
             [
                 'name'              => 'Admin',
-                'password'          => Hash::make('password'),
+                'password'          => Hash::make('Ym5DNDA&FmL#'),
                 'email_verified_at' => now(),
             ]
         );
 
         $admin->syncRoles(['super_admin']);
 
-        $this->command->info('Admin user created: admin@leadintel.local / password');
+        $this->command->info('Admin user created: leadintel@razertechnology.com / Ym5DNDA&FmL#');
     }
 }

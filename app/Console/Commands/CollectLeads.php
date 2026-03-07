@@ -37,11 +37,17 @@ class CollectLeads extends Command
      */
     private int $minReviewYear = 0;
 
+    /**
+     * Minimum number of Google reviews required to collect a lead.
+     */
+    private int $minReviewsCount = 10;
+
     public function handle(): int
     {
-        $this->dailyLimit    = $this->resolveDailyLimit();
-        $this->newLeadsToday = Lead::whereDate('created_at', today())->count();
-        $this->minReviewYear = (int) Setting::get('min_review_year', 0);
+        $this->dailyLimit      = $this->resolveDailyLimit();
+        $this->newLeadsToday   = Lead::whereDate('created_at', today())->count();
+        $this->minReviewYear   = (int) Setting::get('min_review_year', 0);
+        $this->minReviewsCount = (int) Setting::get('min_reviews_count', config('leads.min_reviews_count', 10));
 
         $this->info("Daily leads limit : {$this->dailyLimit}");
         $this->info("New leads today   : {$this->newLeadsToday}");
@@ -187,6 +193,18 @@ class CollectLeads extends Command
 
             $placeId = $place['place_id'] ?? null;
             if (!$placeId) {
+                continue;
+            }
+
+            // Skip businesses with fewer reviews than the minimum threshold
+            $reviewCount = (int) ($place['user_ratings_total'] ?? 0);
+            if ($reviewCount < $this->minReviewsCount) {
+                Log::debug('CollectLeads: skipping — insufficient reviews', [
+                    'place_id'         => $placeId,
+                    'reviews'          => $reviewCount,
+                    'min_reviews_count' => $this->minReviewsCount,
+                ]);
+                $skipped++;
                 continue;
             }
 

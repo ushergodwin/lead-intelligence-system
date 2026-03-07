@@ -132,30 +132,41 @@ class SendSmsJob implements ShouldQueue, ShouldBeUnique
     private function buildMessage(Lead $lead): string
     {
         $companyName  = Setting::get('company_name', config('app.name'));
+        $senderName   = Setting::get('sender_name', '');
         $companyPhone = Setting::get('company_phone', '');
+        $whatsapp     = Setting::get('company_whatsapp', '');
         $reviews      = $lead->reviews_count ?? 0;
         $reviewsLabel = $reviews === 1 ? '1 Google review' : "{$reviews} Google reviews";
 
-        $signature = "- {$companyName}";
+        // Sender identity
+        $signature = $senderName ? "- {$senderName}" : "- {$companyName}";
+
+        // Call-to-action lines
+        $ctaParts = [];
         if ($companyPhone) {
-            $signature .= " | {$companyPhone}";
+            $ctaParts[] = "Call: {$companyPhone}";
         }
+        if ($whatsapp) {
+            $waNumber   = preg_replace('/\D/', '', $whatsapp);
+            $ctaParts[] = "WhatsApp: https://wa.me/{$waNumber}";
+        }
+        $cta = implode("\n", $ctaParts);
 
         if ($this->isFollowUp) {
             $template = Setting::get(
                 'sms_follow_up_template',
-                "Hi {business_name}, just following up on our message about getting you a website. We'd love to help you grow online. Feel free to reach us anytime. {signature}"
+                "Hi {business_name}, just following up on our message about getting you a website. We'd love to help you grow online.\n{signature}\n{cta}"
             );
         } else {
             $template = Setting::get(
                 'sms_body_template',
-                "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help convert more search traffic into sales. Can we share a quick idea with you? {signature}"
+                "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}"
             );
         }
 
         return str_replace(
-            ['{business_name}', '{reviews_label}', '{signature}'],
-            [$lead->business_name, $reviewsLabel, $signature],
+            ['{business_name}', '{reviews_label}', '{signature}', '{cta}'],
+            [$lead->business_name, $reviewsLabel, $signature, $cta],
             $template
         );
     }

@@ -28,17 +28,6 @@ return [
         'tour operators Kampala',
         'travel agencies Kampala',
         'safari companies Uganda',
-
-        // Restaurants
-        'restaurants Kampala',
-        'cafes Kampala',
-        'fine dining Kampala',
-
-        // Airbnb / Rentals
-        'Airbnb Kampala',
-        'serviced apartments Kampala',
-        'short stay apartments Kampala',
-
         // Logistics
         'logistics company Kampala',
         'clearing and forwarding Kampala',
@@ -80,6 +69,7 @@ return [
     | Lead Filtering
     |--------------------------------------------------------------------------
     */
-    'min_review_year' => (int) env('LEADS_MIN_REVIEW_YEAR', 0),
+    'min_review_year'   => (int) env('LEADS_MIN_REVIEW_YEAR', 0),
+    'min_reviews_count' => (int) env('LEADS_MIN_REVIEWS_COUNT', 10),
 
 ];

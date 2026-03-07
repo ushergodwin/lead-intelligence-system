@@ -30,9 +30,10 @@ const role = computed(() => page.props.auth?.role);
 const canManage = computed(() => role.value === 'super_admin' || role.value === 'manager');
 
 const props = defineProps({
-    leads:      { type: Object, required: true },
-    categories: { type: Array,  required: true },
-    filters:    { type: Object, required: true },
+    leads:       { type: Object, required: true },
+    categories:  { type: Array,  required: true },
+    filters:     { type: Object, required: true },
+    smsSettings: { type: Object, default: () => ({}) },
 });
 
 // ---- Phone helper (mirrors PhoneHelper.php) ----
@@ -205,9 +206,27 @@ const sendingSms = ref(false);
 
 const smsPreview = (lead) => {
     if (!lead) return '';
-    const reviews = lead.reviews_count ?? 0;
-    const label   = reviews === 1 ? '1 Google review' : `${reviews} Google reviews`;
-    return `Hello ${lead.business_name}, We saw your ${label} - that's impressive. A simple website could help convert more search traffic into sales. Can we share a quick idea with you? - [Company Name] | [Company Phone]`;
+    const s            = props.smsSettings;
+    const reviews      = lead.reviews_count ?? 0;
+    const reviewsLabel = reviews === 1 ? '1 Google review' : `${reviews} Google reviews`;
+
+    const signature = s.sender_name
+        ? `- ${s.sender_name}, ${s.company_name}`
+        : `- ${s.company_name ?? ''}`;
+
+    const ctaParts = [];
+    if (s.company_phone)    ctaParts.push(`Call: ${s.company_phone}`);
+    if (s.company_whatsapp) ctaParts.push(`WhatsApp: https://wa.me/${s.company_whatsapp.replace(/\D/g, '')}`);
+    const cta = ctaParts.join('\n');
+
+    const template = s.template
+        ?? `Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}`;
+
+    return template
+        .replace(/{business_name}/g, lead.business_name)
+        .replace(/{reviews_label}/g, reviewsLabel)
+        .replace(/{signature}/g, signature)
+        .replace(/{cta}/g, cta);
 };
 
 const openSmsModal = (lead) => {

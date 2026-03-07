@@ -32,6 +32,7 @@ class SettingController extends Controller
         Setting::set('daily_sms_limit',   (string) $data['daily_sms_limit']);
         Setting::set('min_ai_score',      (string) $data['min_ai_score']);
         Setting::set('min_review_year',   (string) $data['min_review_year']);
+        Setting::set('min_reviews_count', (string) $data['min_reviews_count']);
         Setting::set('search_categories', json_encode($data['search_categories']));
 
         foreach (self::SIGNATURE_KEYS as $key) {

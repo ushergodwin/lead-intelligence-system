@@ -129,23 +129,32 @@ class LeadController extends Controller
         }
 
         $companyName  = Setting::get('company_name', config('app.name'));
+        $senderName   = Setting::get('sender_name', '');
         $companyPhone = Setting::get('company_phone', '');
+        $whatsapp     = Setting::get('company_whatsapp', '');
         $reviews      = $lead->reviews_count ?? 0;
         $reviewsLabel = $reviews === 1 ? '1 Google review' : "{$reviews} Google reviews";
 
-        $signature = "- {$companyName}";
+        $signature = $senderName ? "- {$senderName}, {$companyName}" : "- {$companyName}";
+
+        $ctaParts = [];
         if ($companyPhone) {
-            $signature .= " | {$companyPhone}";
+            $ctaParts[] = "Call: {$companyPhone}";
         }
+        if ($whatsapp) {
+            $waNumber   = preg_replace('/\D/', '', $whatsapp);
+            $ctaParts[] = "WhatsApp: https://wa.me/{$waNumber}";
+        }
+        $cta = implode("\n", $ctaParts);
 
         $smsTemplate = Setting::get(
             'sms_body_template',
-            "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help convert more search traffic into sales. Can we share a quick idea with you? {signature}"
+            "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}"
         );
 
         $message = str_replace(
-            ['{business_name}', '{reviews_label}', '{signature}'],
-            [$lead->business_name, $reviewsLabel, $signature],
+            ['{business_name}', '{reviews_label}', '{signature}', '{cta}'],
+            [$lead->business_name, $reviewsLabel, $signature, $cta],
             $smsTemplate
         );
 
@@ -162,7 +171,13 @@ class LeadController extends Controller
         ]);
 
         if ($success) {
-            $lead->update(['sms_sent_at' => now()]);
+            $followUpDays = (int) Setting::get('sms_follow_up_days', config('leads.sms_follow_up_days', 3));
+            $lead->update([
+                'contacted'            => true,
+                'sms_sent_at'          => now(),
+                'sms_follow_up_due_at' => now()->addDays($followUpDays),
+                'sms_follow_up_sent'   => false,
+            ]);
             return response()->json(['message' => 'SMS sent successfully.', 'sms_sent_at' => $lead->sms_sent_at]);
         }
 

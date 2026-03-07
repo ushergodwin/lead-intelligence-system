@@ -34,6 +34,7 @@ class SettingController extends Controller
                 'daily_sms_limit'              => (int) Setting::get('daily_sms_limit', config('leads.daily_sms_limit', 30)),
                 'min_ai_score'                 => (int) Setting::get('min_ai_score', config('leads.min_ai_score', 7)),
                 'min_review_year'              => (int) Setting::get('min_review_year', config('leads.min_review_year', 0)),
+                'min_reviews_count'            => (int) Setting::get('min_reviews_count', config('leads.min_reviews_count', 10)),
                 'search_categories'            => json_decode(
                     Setting::get('search_categories', json_encode(config('leads.default_categories'))),
                     true
@@ -54,11 +55,11 @@ class SettingController extends Controller
                 ),
                 'sms_body_template' => Setting::get(
                     'sms_body_template',
-                    "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help convert more search traffic into sales. Can we share a quick idea with you? {signature}"
+                    "Hello {business_name}, We saw your {reviews_label} - that's impressive. A simple website could help you get more clients. Interested?\n{signature}\n{cta}"
                 ),
                 'sms_follow_up_template' => Setting::get(
                     'sms_follow_up_template',
-                    "Hi {business_name}, just following up on our message about getting you a website. We'd love to help you grow online. Feel free to reach us anytime. {signature}"
+                    "Hi {business_name}, just following up on our message about getting you a website. We'd love to help you grow online.\n{signature}\n{cta}"
                 ),
             ], $signature),
         ]);

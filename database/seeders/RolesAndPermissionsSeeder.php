@@ -19,7 +19,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'viewer']);
 
         // Assign super_admin to existing admin user
-        $admin = User::where('email', 'admin@leadintel.local')->first();
+        $admin = User::where('email', 'leadintel@razertechnology.com')->first();
         if ($admin && ! $admin->hasRole('super_admin')) {
             $admin->assignRole('super_admin');
         }

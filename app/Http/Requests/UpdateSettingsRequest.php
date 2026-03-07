@@ -19,6 +19,7 @@ class UpdateSettingsRequest extends FormRequest
             'daily_sms_limit'     => ['required', 'integer', 'min:1', 'max:500'],
             'min_ai_score'        => ['required', 'integer', 'min:1', 'max:10'],
             'min_review_year'     => ['required', 'integer', 'min:0', 'max:2099'],
+            'min_reviews_count'   => ['required', 'integer', 'min:0', 'max:10000'],
             'search_categories'   => ['required', 'array', 'min:1'],
             'search_categories.*' => ['required', 'string', 'max:100'],
             // Company / sender signature
