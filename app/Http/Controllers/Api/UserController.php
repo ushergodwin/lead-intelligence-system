@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserInvitationMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
@@ -14,30 +18,48 @@ class UserController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        $sendInvite = (bool) $request->input('send_invite', false);
+
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => [$sendInvite ? 'nullable' : 'required', 'string', 'min:8'],
             'role'     => ['required', 'string', Rule::in(['super_admin', 'manager', 'viewer'])],
         ]);
 
-        $user = User::create([
-            'name'              => $validated['name'],
-            'email'             => $validated['email'],
-            'password'          => Hash::make($validated['password']),
-            'email_verified_at' => now(),
-        ]);
+        if ($sendInvite) {
+            $user = User::create([
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => Hash::make(Str::random(32)),
+            ]);
+            $user->assignRole($validated['role']);
 
-        $user->assignRole($validated['role']);
+            $token = Password::createToken($user);
+            Mail::to($user)->queue(new UserInvitationMail($user, $token, $validated['role']));
+
+            $message = "Invitation sent to {$user->email}.";
+        } else {
+            $user = User::create([
+                'name'              => $validated['name'],
+                'email'             => $validated['email'],
+                'password'          => Hash::make($validated['password']),
+                'email_verified_at' => now(),
+            ]);
+            $user->assignRole($validated['role']);
+
+            $message = "User {$user->name} created successfully.";
+        }
 
         return response()->json([
-            'message' => "User {$user->name} created successfully.",
+            'message' => $message,
             'user'    => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'role'       => $validated['role'],
-                'created_at' => $user->created_at->format('d M Y'),
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'role'              => $validated['role'],
+                'created_at'        => $user->created_at->format('d M Y'),
+                'email_verified_at' => $user->email_verified_at,
             ],
         ], 201);
     }
@@ -62,11 +84,12 @@ class UserController extends Controller
         return response()->json([
             'message' => "User {$user->name} updated.",
             'user'    => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'role'       => $validated['role'],
-                'created_at' => $user->created_at->format('d M Y'),
+                'id'                => $user->id,
+                'name'              => $user->name,
+                'email'             => $user->email,
+                'role'              => $validated['role'],
+                'created_at'        => $user->created_at->format('d M Y'),
+                'email_verified_at' => $user->email_verified_at,
             ],
         ]);
     }
@@ -81,5 +104,18 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['message' => "{$name} has been removed."]);
+    }
+
+    public function resendInvite(User $user): JsonResponse
+    {
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'This user has already activated their account.'], 422);
+        }
+
+        $role  = $user->roles->first()?->name ?? 'viewer';
+        $token = Password::createToken($user);
+        Mail::to($user)->queue(new UserInvitationMail($user, $token, $role));
+
+        return response()->json(['message' => "Invitation resent to {$user->email}."]);
     }
 }

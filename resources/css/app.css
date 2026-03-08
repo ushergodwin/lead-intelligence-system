@@ -395,11 +395,70 @@ body {
     color: #e2e8f0 !important;
 }
 
-/* ---- Responsive ---- */
+/* ---- Mobile sidebar backdrop ---- */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1029;
+    backdrop-filter: blur(2px);
+}
+
+/* ---- Responsive — tablet (collapse to icons) ---- */
 @media (max-width: 768px) {
     .sidebar { width: 60px; }
     .main-wrapper { margin-left: 60px; }
     .sidebar .brand span,
     .sidebar .nav-link span,
     .sidebar-section-label { display: none; }
+}
+
+/* ---- Responsive — mobile (full overlay) ---- */
+@media (max-width: 575.98px) {
+    /* Sidebar slides fully off-screen by default */
+    .sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width);
+        transition: transform 0.25s ease, width 0.25s ease;
+        z-index: 1030;
+    }
+
+    /* Show text labels when sidebar is open on mobile */
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    .sidebar.mobile-open .brand span,
+    .sidebar.mobile-open .nav-link span {
+        display: inline;
+    }
+
+    /* Backdrop visible when sidebar is open */
+    .sidebar.mobile-open ~ .sidebar-backdrop,
+    .sidebar-backdrop.visible {
+        display: block;
+    }
+
+    /* Main content takes full width */
+    .main-wrapper {
+        margin-left: 0 !important;
+    }
+
+    /* Larger touch targets */
+    .btn-sm {
+        min-height: 36px;
+        padding-left: 0.6rem;
+        padding-right: 0.6rem;
+    }
+
+    /* Page content padding reduction */
+    .page-content {
+        padding: 1rem 0.75rem;
+    }
+
+    /* Top navbar on mobile */
+    .top-navbar {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
 }

@@ -584,8 +584,8 @@ const scoreBadgeClass = (score) => {
                                     <input type="checkbox" class="form-check-input" :checked="allChecked" @change="toggleAll">
                                 </th>
                                 <th>Business Name</th>
-                                <th>Category</th>
-                                <th class="cursor-pointer" @click="sortBy('rating')">
+                                <th class="d-none d-md-table-cell">Category</th>
+                                <th class="d-none d-md-table-cell cursor-pointer" @click="sortBy('rating')">
                                     Rating <i class="fas fa-sort ms-1 opacity-50"></i>
                                 </th>
                                 <th class="cursor-pointer" @click="sortBy('reviews_count')">
@@ -608,8 +608,8 @@ const scoreBadgeClass = (score) => {
                                     <div class="fw-semibold">{{ lead.business_name }}</div>
                                     <div class="text-muted small text-truncate" style="max-width:200px">{{ lead.address }}</div>
                                 </td>
-                                <td><span class="badge bg-light text-dark border">{{ lead.category }}</span></td>
-                                <td>
+                                <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark border">{{ lead.category }}</span></td>
+                                <td class="d-none d-md-table-cell">
                                     <span v-if="lead.rating">
                                         <i class="fas fa-star text-warning me-1"></i>{{ lead.rating }}
                                     </span>

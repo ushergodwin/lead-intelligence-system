@@ -103,10 +103,10 @@ const retryLog = async (log) => {
                             <tr>
                                 <th class="ps-3">Business</th>
                                 <th>Channel</th>
-                                <th>Email</th>
+                                <th class="d-none d-md-table-cell">Email</th>
                                 <th>Status</th>
-                                <th>Response</th>
-                                <th>Sent At</th>
+                                <th class="d-none d-md-table-cell">Response</th>
+                                <th class="d-none d-sm-table-cell">Sent At</th>
                                 <th v-if="canManage" class="text-end pe-3">Action</th>
                             </tr>
                         </thead>
@@ -122,14 +122,14 @@ const retryLog = async (log) => {
                                     </span>
                                     <span v-else class="text-muted small">—</span>
                                 </td>
-                                <td>{{ log.email ?? '—' }}</td>
+                                <td class="d-none d-md-table-cell">{{ log.email ?? '—' }}</td>
                                 <td><span :class="statusBadge(log.status)">{{ log.status }}</span></td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     <span class="text-muted small text-truncate d-inline-block" style="max-width:200px">
                                         {{ log.response ?? '—' }}
                                     </span>
                                 </td>
-                                <td class="text-muted small">{{ formatDate(log.sent_at) }}</td>
+                                <td class="text-muted small d-none d-sm-table-cell">{{ formatDate(log.sent_at) }}</td>
                                 <td v-if="canManage" class="text-end pe-3">
                                     <button
                                         v-if="log.status === 'failed' && log.channel === 'email'"

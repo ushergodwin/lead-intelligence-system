@@ -19,11 +19,12 @@ class UserController extends Controller
             ->orderBy('name')
             ->get()
             ->map(fn($u) => [
-                'id'         => $u->id,
-                'name'       => $u->name,
-                'email'      => $u->email,
-                'role'       => $u->roles->first()?->name ?? 'none',
-                'created_at' => $u->created_at->format('d M Y'),
+                'id'                => $u->id,
+                'name'              => $u->name,
+                'email'             => $u->email,
+                'role'              => $u->roles->first()?->name ?? 'none',
+                'created_at'        => $u->created_at->format('d M Y'),
+                'email_verified_at' => $u->email_verified_at,
             ]);
 
         $roles = Role::orderBy('name')->pluck('name');

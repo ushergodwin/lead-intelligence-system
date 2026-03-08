@@ -10,8 +10,14 @@ const isSuperAdmin = computed(() => role.value === 'super_admin');
 const canManage    = computed(() => role.value === 'super_admin' || role.value === 'manager');
 
 const sidebarCollapsed  = ref(false);
+const mobileOpen        = ref(false);
 const userMenuOpen      = ref(false);
 const isDark            = ref(false);
+
+const isMobile = () => window.innerWidth < 576;
+
+const toggleSidebarMobile = () => { mobileOpen.value = !mobileOpen.value; };
+const closeMobileSidebar  = () => { mobileOpen.value = false; };
 
 const applyTheme = (dark) => {
     document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
@@ -34,7 +40,11 @@ const toggleUserMenu = () => { userMenuOpen.value = !userMenuOpen.value; };
 const closeUserMenu  = () => { userMenuOpen.value = false; };
 
 const toggleSidebar = () => {
-    sidebarCollapsed.value = !sidebarCollapsed.value;
+    if (isMobile()) {
+        toggleSidebarMobile();
+    } else {
+        sidebarCollapsed.value = !sidebarCollapsed.value;
+    }
 };
 
 const logout = () => {
@@ -76,8 +86,11 @@ const getHref = (item) => {
 
 <template>
     <div>
+        <!-- Mobile backdrop -->
+        <div class="sidebar-backdrop" :class="{ visible: mobileOpen }" @click="closeMobileSidebar"></div>
+
         <!-- Sidebar -->
-        <nav class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+        <nav class="sidebar" :class="{ collapsed: sidebarCollapsed, 'mobile-open': mobileOpen }">
             <!-- Brand -->
             <a href="#" class="brand">
                 <img src="/img/logo.png" alt="LeadIntel" class="sidebar-logo">
@@ -91,6 +104,7 @@ const getHref = (item) => {
                         :href="getHref(item)"
                         class="nav-link"
                         :class="{ active: isActive(item) }"
+                        @click="closeMobileSidebar"
                     >
                         <i :class="item.icon"></i>
                         <span>{{ item.label }}</span>
@@ -134,7 +148,7 @@ const getHref = (item) => {
                                   style="width:28px;height:28px;font-size:.75rem;flex-shrink:0">
                                 {{ user?.name?.charAt(0)?.toUpperCase() }}
                             </span>
-                            <span class="fw-semibold small text-dark">{{ user?.name }}</span>
+                            <span class="fw-semibold small text-dark d-none d-sm-inline">{{ user?.name }}</span>
                             <i class="fas fa-chevron-down text-muted" style="font-size:.65rem"></i>
                         </button>
 

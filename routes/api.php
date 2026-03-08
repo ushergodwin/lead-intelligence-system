@@ -64,8 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User management — super_admin only
     Route::middleware('role:super_admin')->prefix('users')->name('users.')->group(function () {
-        Route::post('/',         [UserController::class, 'store'])->name('store');
-        Route::put('/{user}',    [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        Route::post('/',                     [UserController::class, 'store'])->name('store');
+        Route::put('/{user}',                [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}',             [UserController::class, 'destroy'])->name('destroy');
+        Route::post('/{user}/resend-invite', [UserController::class, 'resendInvite'])->name('resend-invite');
     });
 });
