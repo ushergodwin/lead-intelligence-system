@@ -22,7 +22,7 @@ class UserInvitationMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $companyName = Setting::get('company_name', config('app.name'));
+        $companyName = Setting::get('company_name') ?: config('app.name');
         return new Envelope(subject: "You've been invited to join {$companyName}");
     }
 
@@ -39,7 +39,7 @@ class UserInvitationMail extends Mailable
                 'user'        => $this->user,
                 'role'        => $this->role,
                 'resetUrl'    => $resetUrl,
-                'companyName' => Setting::get('company_name', config('app.name')),
+                'companyName' => Setting::get('company_name') ?: config('app.name'),
                 'companyEmail'=> Setting::get('company_email', ''),
             ],
         );

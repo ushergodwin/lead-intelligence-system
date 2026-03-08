@@ -11,9 +11,8 @@
     <p>Hi <strong>{{ $user->name }}</strong>,</p>
 
     <p>
-        You have been invited to join <strong>{{ $companyName }}</strong>'s
-        Lead Intelligence System as a
-        <span class="role-badge">{{ str_replace('_', ' ', $role) }}</span>.
+        You have been invited to join <strong>{{ $companyName }}</strong>
+        as a <span class="role-badge">{{ str_replace('_', ' ', $role) }}</span>.
     </p>
 
     <p>Click the button below to set up your password and activate your account:</p>
