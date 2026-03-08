@@ -1,0 +1,57 @@
+services:
+
+    lead-intelligence-app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: lead-intelligence-app
+        container_name: lead-intelligence-app
+        restart: unless-stopped
+        working_dir: /var/www/lead-intelligence-system
+        env_file: .env
+        volumes:
+            # Persist storage (logs, sessions, cache, uploads) across rebuilds
+            - storage_data:/var/www/lead-intelligence-system/storage
+        expose:
+            - "9000"
+        depends_on:
+            lead-intelligence-db:
+                condition: service_healthy
+        networks:
+            - lead-net
+            - caddy-net   # shared network so Caddy (ZyberNet) can route to this container
+
+    lead-intelligence-db:
+        image: mysql:8.0
+        container_name: lead-intelligence-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE:-lead_intelligence_system}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - dbdata:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        networks:
+            - lead-net
+
+volumes:
+    dbdata:
+    storage_data:
+
+networks:
+    lead-net:
+        driver: bridge
+    caddy-net:
+        # This must match the network created by ZyberNet's docker-compose.
+        # Default name: <project-name>_superspotwifi-net
+        # If ZyberNet is deployed at /var/www/superspotwifi the name is:
+        #   superspotwifi_superspotwifi-net
+        # Adjust the name below if your server directory differs.
+        external: true
+        name: superspotwifi_superspotwifi-net
