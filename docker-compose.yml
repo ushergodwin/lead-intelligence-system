@@ -12,6 +12,9 @@ services:
         volumes:
             # Persist storage (logs, sessions, cache, uploads) across rebuilds
             - storage_data:/var/www/lead-intelligence-system/storage
+            # Bind-mount public/build so Caddy (on the host) can serve the compiled assets.
+            # The entrypoint copies assets here from /tmp/build-artifacts on every start.
+            - ./public/build:/var/www/lead-intelligence-system/public/build
         expose:
             - "9000"
         depends_on:

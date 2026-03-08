@@ -25,9 +25,10 @@ COPY . .
 # Install PHP dependencies (production, no dev)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Build front-end assets then drop node_modules to keep image lean
+# Build front-end assets, stash them for the entrypoint, then drop node_modules
 RUN npm install --legacy-peer-deps \
     && npm run build \
+    && cp -r public/build /tmp/build-artifacts \
     && rm -rf node_modules
 
 # Permissions

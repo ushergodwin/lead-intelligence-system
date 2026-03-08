@@ -31,5 +31,9 @@ php artisan view:cache
 echo "[entrypoint] Linking storage..."
 php artisan storage:link --force 2>/dev/null || true
 
+echo "[entrypoint] Publishing built assets to host-mounted public/build..."
+mkdir -p public/build
+cp -rf /tmp/build-artifacts/. public/build/
+
 echo "[entrypoint] Starting supervisord..."
 exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
