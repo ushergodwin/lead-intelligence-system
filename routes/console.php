@@ -11,11 +11,11 @@ Artisan::command('inspire', function () {
 // ---- Scheduler ----
 
 // Collect leads from Google Places every Monday at 1:00 AM
-Schedule::command('leads:collect')
-    ->weeklyOn(1, '01:00')
-    ->withoutOverlapping()
-    ->runInBackground()
-    ->appendOutputTo(storage_path('logs/collect-leads.log'));
+// Schedule::command('leads:collect')
+//     ->weeklyOn(1, '01:00')
+//     ->withoutOverlapping()
+//     ->runInBackground()
+//     ->appendOutputTo(storage_path('logs/collect-leads.log'));
 
 // Auto-send approved leads every day at 9:00 AM
 Schedule::command('leads:send-approved')
